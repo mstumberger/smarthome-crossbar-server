@@ -1,0 +1,151 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.4
+-- Dumped by pg_dump version 9.6.4
+
+-- Started on 2017-10-24 15:41:38 CEST
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 1 (class 3079 OID 12393)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 2143 (class 0 OID 0)
+-- Dependencies: 1
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 187 (class 1259 OID 16420)
+-- Name: devices_id; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE devices_id (
+    id integer NOT NULL,
+    device_name character varying(30) DEFAULT NULL::character varying,
+    ip character varying(30) DEFAULT NULL::character varying,
+    mac_addr character varying(30) DEFAULT NULL::character varying,
+    location character varying(30),
+    active boolean,
+    sensor_id character varying(30),
+    details jsonb
+);
+
+
+ALTER TABLE devices_id OWNER TO postgres;
+
+--
+-- TOC entry 186 (class 1259 OID 16418)
+-- Name: devices_id_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE devices_id_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE devices_id_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2144 (class 0 OID 0)
+-- Dependencies: 186
+-- Name: devices_id_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE devices_id_id_seq OWNED BY devices_id.id;
+
+
+--
+-- TOC entry 185 (class 1259 OID 16398)
+-- Name: measurements; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE measurements (
+    "timestamp" timestamp with time zone,
+    event character varying(30),
+    measurement jsonb,
+    device_id integer
+);
+
+
+ALTER TABLE measurements OWNER TO postgres;
+
+--
+-- TOC entry 2011 (class 2604 OID 16423)
+-- Name: devices_id id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY devices_id ALTER COLUMN id SET DEFAULT nextval('devices_id_id_seq'::regclass);
+
+
+--
+-- TOC entry 2136 (class 0 OID 16420)
+-- Dependencies: 187
+-- Data for Name: devices_id; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY devices_id (id, device_name, ip, mac_addr, location, active, sensor_id, details) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2145 (class 0 OID 0)
+-- Dependencies: 186
+-- Name: devices_id_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('devices_id_id_seq', 0, true);
+
+
+--
+-- TOC entry 2134 (class 0 OID 16398)
+-- Dependencies: 185
+-- Data for Name: measurements; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY measurements ("timestamp", event, measurement, device_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2016 (class 2606 OID 16428)
+-- Name: devices_id devices_id_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY devices_id
+    ADD CONSTRAINT devices_id_pkey PRIMARY KEY (id);
+
+
+-- Completed on 2017-10-24 15:41:44 CEST
+
+--
+-- PostgreSQL database dump complete
+--
+

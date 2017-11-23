@@ -1,0 +1,19 @@
+{
+    "pid": 30999, 
+    "options": {
+        "reactor": null, 
+        "loglevel": "info", 
+        "logtofile": false, 
+        "cbdir": "/home/marko/Desktop/micropython_esp32/CBS/.crossbar", 
+        "logformat": "standard", 
+        "command": "start", 
+        "logdir": null, 
+        "config": "config.json", 
+        "colour": "auto", 
+        "personality": "community"
+    }, 
+    "argv": [
+        "/usr/local/bin/crossbar", 
+        "start"
+    ]
+}
