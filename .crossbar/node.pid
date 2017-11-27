@@ -1,10 +1,10 @@
 {
-    "pid": 30999, 
+    "pid": 7210, 
     "options": {
         "reactor": null, 
         "loglevel": "info", 
         "logtofile": false, 
-        "cbdir": "/home/marko/Desktop/micropython_esp32/CBS/.crossbar", 
+        "cbdir": "/home/marko/Desktop/GITLAB/Marko/SmartHome/smarthome-server/.crossbar", 
         "logformat": "standard", 
         "command": "start", 
         "logdir": null, 

@@ -69,6 +69,8 @@ class MQTTService(ClientService):
         d4.addCallbacks(_logGrantedQoS, _logFailure)
         d5 = self.protocol.subscribe("initialize/#", 2)
         d5.addCallbacks(_logGrantedQoS, _logFailure)
+        d6 = self.protocol.subscribe("update", 2)
+        d6.addCallbacks(_logGrantedQoS, _logFailure)
 
         dlist = DeferredList([d1, d2, d3, d4, d5], consumeErrors=True)
         dlist.addCallback(_logAll)

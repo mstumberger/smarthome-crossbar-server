@@ -43,9 +43,10 @@
                     },
                     "paths": {
                         "/": {
-                            "type": "static",
-                            "directory": "../web"
-                        },
+                             "type": "wsgi",
+                             "module": "flask_app",
+                             "object": "app"
+                              },
                         "ws": {
                             "type": "websocket",
                             "options": {
