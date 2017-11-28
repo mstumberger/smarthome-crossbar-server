@@ -6,7 +6,7 @@ import git
 import pickle
 
 if not os.path.exists("auto_update.p"):
-    auto_update = {"server": True,
+    auto_update = {"backend": True,
                    "frontend": True,
                    "esp_client": True}
 
@@ -36,7 +36,7 @@ def frontend_webhook():
 
 @app.route('/backend_webhook', methods=['POST'])
 def backend_webhook():
-    if auto_update["server"]:
+    if auto_update["backend"]:
         pprint(request.data)
         data = request.data.strip().replace("\n", "")
         repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
@@ -64,7 +64,7 @@ def esp_client_webhook():
 
 @app.route('/repository/<path:path>')
 def repository(path):
-    return send_from_directory('../smarthome-esp32-client', path)
+    return send_from_directory('../', path)
 
 
 @app.route("/")
