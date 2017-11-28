@@ -1,8 +1,20 @@
-# -----------------------
-# MQTT Subscriber Service
-# ------------------------
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#  #############################  #
+#     -----------------------     #
+#     MQTT Forwarder Service      #
+#     ------------------------    #
+# #  author: Marko Stumberger   # #
+# sudo pip install twisted-mqtt   #
+#  #############################  #
+
+from autobahn.twisted.wamp import ApplicationSession
 from twisted.internet.defer import inlineCallbacks, DeferredList
 from twisted.application.internet import ClientService, backoffPolicy
+from twisted.internet.endpoints import clientFromString
+from twisted.internet import reactor
+from mqtt.client.factory import MQTTFactory
+BROKER = "tcp:localhost:1883"
 
 
 class MQTTService(ClientService):
@@ -11,21 +23,18 @@ class MQTTService(ClientService):
         ClientService.__init__(self, endpoint, factory, retryPolicy=backoffPolicy())
         self.BROKER = BROKER
         self.mainApp = mainApp
+        self.protocol = None
         self.startService()
 
     def startService(self):
         print("starting MQTT Client Subscriber Service")
-        # invoke whenConnected() inherited method
         self.whenConnected().addCallback(self.connectToBroker)
         ClientService.startService(self)
 
     @inlineCallbacks
     def connectToBroker(self, protocol):
-        '''
-        Connect to MQTT broker
-        '''
-        self.protocol                 = protocol
-        self.protocol.onPublish       = self.onPublish
+        self.protocol = protocol
+        self.protocol.onPublish = self.onPublish
         self.protocol.onDisconnection = self.onDisconnection
         self.protocol.setWindowSize(6)
         try:
@@ -90,18 +99,75 @@ class MQTTService(ClientService):
         return d1
 
     def onPublish(self, topic, payload, qos, dup, retain, msgId):
-        '''
-        Callback Receiving messages from publisher
-        '''
-        #print("topic: {}, message: {}".format(topic, payload))
-        #print topic, payload.split(",")[1]
         self.mainApp.printmsg(topic, payload)
 
     def onDisconnection(self, reason):
-        '''
-        get notfied of disconnections
-        and get a deferred for a new protocol object (next retry)
-        '''
         print(" >< Connection was lost ! ><, reason={r}".format(r=reason))
-        #self.mainApp.printmsg(" >< Connection was lost ! ><, reason={r}".format(r=reason))
-        #self.whenConnected().addCallback(self.connectToBroker)
+
+
+class Component(ApplicationSession):
+    mqtt = None
+    protocol = None
+
+    @inlineCallbacks
+    def onJoin(self, details):
+        # create a new database connection pool. connections are created lazy (as needed)
+        print("CONNECTED")
+        self.mqtt = MQTTService(self, clientFromString(reactor, BROKER), MQTTFactory(profile=MQTTFactory.PUBLISHER | MQTTFactory.SUBSCRIBER), BROKER)
+
+        yield self.subscribe(self.printmsg, u"server_update")
+        yield self.register(self.mqtt_publish, u"mqtt_publish")
+        print str(details.session)
+        self.call(u"add_service", str(details.session),
+                                  "forwarder",
+                                  "CORE",
+                                  "localhost")
+        #self.mqtt.subscribe_to("topic")
+
+    def mqtt_subscribe(self, topic):
+        self.mqtt.subscribe_to(topic)
+        return "Subscribed to topic: {}".format(topic)
+
+    @inlineCallbacks
+    def printmsg(self, topic, data):
+        print(topic)
+        if topic == "register/relay":
+            print("Register relay device")
+
+            response = yield self.call(u"register_relay_client", str(data))
+            print(response)
+        elif topic == "register/device":
+            print("Register device")
+
+            response = yield self.call(u"register_device", str(data))
+            print(response)
+
+        elif "initialize/" in topic:
+            print(topic, data, "from forwarder")
+
+        elif topic == "register/sensor" or topic == "register/temp":
+            print("Register sensor")
+
+            response = yield self.call(u"register_client", str(data))
+            print(response)
+
+        elif topic == "alerts":
+            print("GOT ALERT")
+            self.publish(u"alerts", b"ALO NE MORES DIHAT")
+
+        elif topic == "measurements":
+            response = yield self.call(u"insert", str(data))
+            print(response)
+        else:
+            print("Unknown topic: {}".format(topic))
+
+    def mqtt_publish(self, topic, data):
+        print(data)
+        try:
+            self.mqtt.publish(topic, bytes(data))
+        except ValueError as e:
+            print(e)
+        return "Published"
+
+    def onDisconnect(self):
+        print("Client was shutdown")
