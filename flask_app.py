@@ -4,7 +4,15 @@ from pprint import pprint
 import os, shutil
 import git
 import pickle
-auto_update = pickle.load(open("auto_update.p", "rb"))
+
+if not os.path.exists("auto_update.p"):
+    auto_update = {"backend": True,
+                   "frontend": True,
+                   "esp_client": True}
+
+    pickle.dump(auto_update, open("auto_update.p", "wb"))
+else:
+    auto_update = pickle.load( open("auto_update.p", "rb"))
 
 """
 http://gitpython.readthedocs.io/en/stable/tutorial.html?highlight=clone
