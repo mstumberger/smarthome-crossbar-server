@@ -30,6 +30,25 @@
                                     "cache": true
                                 }
                             ]
+                        },
+                        {
+                            "name": "forwarder",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "allow": {
+                                        "call": true,
+                                        "register": true,
+                                        "publish": true,
+                                        "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": true,
+                                        "publisher": true
+                                    },
+                                    "cache": true
+                                }
+                            ]
                         }
                     ]
                 }
@@ -42,11 +61,15 @@
                         "port": 8080
                     },
                     "paths": {
-                        "/": {
+                        "app": {
                              "type": "wsgi",
                              "module": "flask_app",
                              "object": "app"
                               },
+                        "/": {
+                            "type": "static",
+                            "directory": "../../../WebstormProjects/smarthome-frontend"
+                        },
                         "ws": {
                             "type": "websocket",
                             "options": {
@@ -111,6 +134,12 @@
                     "classname": "backend.AppSession",
                     "realm": "realm1",
                     "role": "anonymous"
+                },
+                {
+                    "type": "class",
+                    "classname": "forwarder.Component",
+                    "realm": "realm1",
+                    "role": "forwarder"
                 }
             ]
         }
