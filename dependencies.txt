@@ -1,9 +1,9 @@
 Crossbar==17.5.1
 Autobahn==17.9.3
 Twisted==17.9.0
+psycopg2
 Flask==0.12.2
 gitpython==2.1.7
-
-pyOpenSSL==0.15.1
+pyOpenSSL
 service-identity==16.0.0
-
+twisted-mqtt
