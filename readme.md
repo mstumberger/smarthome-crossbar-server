@@ -1,8 +1,21 @@
 # SmartHome server (0.2): 
 ># Install python dependencies:
 >
+    sudo apt-get -y install build-essential libssl-dev libffi-dev \
+    libreadline-dev libbz2-dev libsqlite3-dev libncurses5-dev
+
+    sudo apt-get install python3-dev
+    or
+    sudo apt-get install python-dev
+
     pip3 install -r requirements.txt
+
 >
+
+># Install postgres:
+>
+    sudo apt-get install postgresql postgresql-contrib
+
 ># Connect to server:
     domain:8080 (ws, http)
     domain:8181 (wss, https) (in future)
