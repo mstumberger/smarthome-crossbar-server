@@ -3,6 +3,8 @@ import json
 from pprint import pprint
 import os, shutil
 import git
+import pickle
+auto_update = pickle.load(open("auto_update.p", "rb"))
 
 """
 http://gitpython.readthedocs.io/en/stable/tutorial.html?highlight=clone
@@ -10,43 +12,54 @@ http://gitpython.readthedocs.io/en/stable/tutorial.html?highlight=clone
 app = Flask(__name__, static_url_path='')
 
 
-@app.route('/git_webhook', methods=['POST'])
-def root():
-    try:
-        data = json.loads(request.data)
-        print "New commit by: {}".format(data['commits'][0]['author']['name'])
-        pprint(data)
-        print "New commit by: {}".format(data['repository']['url'])
-        data["project"]["namespace"] = data["project"]["namespace"].replace(" ", "_")
-        data["project"]["name"] = data["project"]["name"].replace(" ", "_")
-        src = str(os.path.join("RSYNC_REPO", data["project"]["namespace"], data["project"]["namespace"] + "_" + data["project"]["name"] + "_" + data["checkout_sha"]))
-        if not os.path.exists(src):
-           os.makedirs(src)
-        else:
-            shutil.rmtree(src)
-            os.makedirs(src)
-        try:
-            git.Git().clone(data['repository']['url'], src)
-        except Exception as e:
-            print "path seems to exists.", e
+@app.route('/frontend_webhook', methods=['POST'])
+def frontend_webhook():
+    if auto_update["frontend"]:
+        pprint(request.data)
+        data = request.data.strip().replace("\n", "")
+        repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
+        git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
+        print("GIT: {}".format(git_path))
 
-        destination = str(os.path.join("RSYNC_REPO", data["project"]["namespace"], data["project"]["name"]+"_LATEST"))
-
-        if not os.path.exists(destination):
-            os.makedirs(destination)
-        else:
-            shutil.rmtree(destination)
-            shutil.copytree(src, destination, True)
-        return "OK"
-    except:
-        return "FAIL"
+    else:
+        print("Frontend Webhook is disabled in auto_update.p config")
 
 
-@app.route('/code/<path:path>')
-def send_js(path):
-    return send_from_directory('web', path)
-# def file():
-#     return app.send_static_file('web/main.py')
+@app.route('/backend_webhook', methods=['POST'])
+def backend_webhook():
+    if auto_update["backend"]:
+        pprint(request.data)
+        data = request.data.strip().replace("\n", "")
+        repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
+        git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
+        print("GIT: {}".format(git_path))
+
+    else:
+        print("Frontend Webhook is disabled in auto_update.p config")
+
+
+@app.route('/esp_client_webhook', methods=['POST'])
+def esp_client_webhook():
+    if auto_update["esp_client"]:
+        pprint(request.data)
+        data = request.data.strip().replace("\n", "")
+        repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
+        git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
+        print("GIT: {}".format(git_path))
+
+    else:
+        print("Frontend Webhook is disabled in auto_update.p config")
+
+
+@app.route('/repository/<path:path>')
+def repository(path):
+    return send_from_directory('../smarthome-esp32-client', path)
+
+
+@app.route("/")
+def hello():
+    return "Hello World!"
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8282)
