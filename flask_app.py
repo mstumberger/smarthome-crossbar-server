@@ -6,7 +6,7 @@ import git
 import pickle
 
 if not os.path.exists("auto_update.p"):
-    auto_update = {"backend": True,
+    auto_update = {"server": True,
                    "frontend": True,
                    "esp_client": True}
 
@@ -14,6 +14,7 @@ if not os.path.exists("auto_update.p"):
 else:
     auto_update = pickle.load( open("auto_update.p", "rb"))
 
+print auto_update
 """
 http://gitpython.readthedocs.io/en/stable/tutorial.html?highlight=clone
 """
@@ -35,7 +36,7 @@ def frontend_webhook():
 
 @app.route('/backend_webhook', methods=['POST'])
 def backend_webhook():
-    if auto_update["backend"]:
+    if auto_update["server"]:
         pprint(request.data)
         data = request.data.strip().replace("\n", "")
         repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
