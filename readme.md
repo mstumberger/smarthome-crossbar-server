@@ -14,6 +14,32 @@
 ># Install postgres:
 >
     sudo apt-get install postgresql postgresql-contrib
+>
+>### Create database:
+>
+    CREATE TABLE devices_id (
+    id serial primary key,
+    device_name character varying(30) DEFAULT NULL::character varying,
+    ip character varying(30) DEFAULT NULL::character varying,
+    mac_addr character varying(30) DEFAULT NULL::character varying,
+    location character varying(30),
+    active boolean,
+    sensor_id character varying(30),
+    client_id character varying(30),
+    details jsonb
+    );
+>
+    CREATE TABLE measurements (
+    "timestamp" timestamp with time zone,
+    event character varying(30),
+    measurement jsonb,
+    device_id integer
+    );
+>
+>
+>
+
+
 
 ># Connect to server:
     domain:8080 (ws, http)
