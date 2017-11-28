@@ -29,9 +29,9 @@ def frontend_webhook():
         repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
         git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
         print("GIT: {}".format(git_path))
-
     else:
         print("Frontend Webhook is disabled in auto_update.p config")
+    return "OK"
 
 
 @app.route('/backend_webhook', methods=['POST'])
@@ -45,6 +45,7 @@ def backend_webhook():
 
     else:
         print("Frontend Webhook is disabled in auto_update.p config")
+    return "OK"
 
 
 @app.route('/esp_client_webhook', methods=['POST'])
@@ -58,6 +59,7 @@ def esp_client_webhook():
 
     else:
         print("Frontend Webhook is disabled in auto_update.p config")
+    return "OK"
 
 
 @app.route('/repository/<path:path>')
