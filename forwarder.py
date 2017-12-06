@@ -9,12 +9,13 @@
 #  #############################  #
 
 from autobahn.twisted.wamp import ApplicationSession
-from twisted.internet.defer import inlineCallbacks, DeferredList
+from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet.endpoints import clientFromString
 from twisted.internet import reactor
 from mqtt.client.factory import MQTTFactory
-BROKER = "tcp:localhost:1883"
+
+host = "localhost"
 
 
 class MQTTService(ClientService):
@@ -58,25 +59,23 @@ class MQTTService(ClientService):
 
     def subscribe(self):
         def _logFailure(failure):
-            print("reported {message}".format(message=failure.getErrorMessage()))
             return failure
 
         def _logGrantedQoS(value):
-            print("response {value!r}".format(value=value))
             return True
 
         def _logAll(*args):
             print("all subscriptions complete args={args!r}".format(args=args))
 
-        d1 = self.protocol.subscribe("mqtt/esp32", 1)
+        d1 = self.protocol.subscribe("initialize/#", 1)
         d1.addCallbacks(_logGrantedQoS, _logFailure)
         d2 = self.protocol.subscribe("register/#", 2)
         d2.addCallbacks(_logGrantedQoS, _logFailure)
-        d3 = self.protocol.subscribe("measurements", 1)
+        d3 = self.protocol.subscribe("actions/#", 1)
         d3.addCallbacks(_logGrantedQoS, _logFailure)
-        d4 = self.protocol.subscribe("alerts", 2)
+        d4 = self.protocol.subscribe("measurements/#", 2)
         d4.addCallbacks(_logGrantedQoS, _logFailure)
-        d5 = self.protocol.subscribe("initialize/#", 2)
+        d5 = self.protocol.subscribe("alerts", 2)
         d5.addCallbacks(_logGrantedQoS, _logFailure)
         d6 = self.protocol.subscribe("update", 2)
         d6.addCallbacks(_logGrantedQoS, _logFailure)
@@ -99,7 +98,7 @@ class MQTTService(ClientService):
         return d1
 
     def onPublish(self, topic, payload, qos, dup, retain, msgId):
-        self.mainApp.printmsg(topic, payload)
+        self.mainApp.mqtt_receives(topic, payload)
 
     def onDisconnection(self, reason):
         print(" >< Connection was lost ! ><, reason={r}".format(r=reason))
@@ -113,53 +112,25 @@ class Component(ApplicationSession):
     def onJoin(self, details):
         # create a new database connection pool. connections are created lazy (as needed)
         print("CONNECTED")
-        self.mqtt = MQTTService(self, clientFromString(reactor, BROKER), MQTTFactory(profile=MQTTFactory.PUBLISHER | MQTTFactory.SUBSCRIBER), BROKER)
+        broker = "tcp:{}:1883".format(host)
+        self.mqtt = MQTTService(self, clientFromString(reactor, broker), MQTTFactory(profile=MQTTFactory.PUBLISHER | MQTTFactory.SUBSCRIBER), broker)
 
-        yield self.subscribe(self.printmsg, u"server_update")
         yield self.register(self.mqtt_publish, u"mqtt_publish")
-        print str(details.session)
         self.call(u"add_service", str(details.session),
                                   "forwarder",
                                   "CORE",
                                   "localhost")
-        #self.mqtt.subscribe_to("topic")
+        # self.mqtt.subscribe_to("topic")
 
     def mqtt_subscribe(self, topic):
         self.mqtt.subscribe_to(topic)
         return "Subscribed to topic: {}".format(topic)
 
     @inlineCallbacks
-    def printmsg(self, topic, data):
-        print(topic)
-        if topic == "register/relay":
-            print("Register relay device")
-
-            response = yield self.call(u"register_relay_client", str(data))
-            print(response)
-        elif topic == "register/device":
-            print("Register device")
-
-            response = yield self.call(u"register_device", str(data))
-            print(response)
-
-        elif "initialize/" in topic:
-            print(topic, data, "from forwarder")
-
-        elif topic == "register/sensor" or topic == "register/temp":
-            print("Register sensor")
-
-            response = yield self.call(u"register_client", str(data))
-            print(response)
-
-        elif topic == "alerts":
-            print("GOT ALERT")
-            self.publish(u"alerts", b"ALO NE MORES DIHAT")
-
-        elif topic == "measurements":
-            response = yield self.call(u"insert", str(data))
-            print(response)
-        else:
-            print("Unknown topic: {}".format(topic))
+    def mqtt_receives(self, topic, data):
+        response = yield self.call(u"mqtt_receives", topic, data)
+        returnValue("ok")
+        return
 
     def mqtt_publish(self, topic, data):
         print(data)
@@ -171,3 +142,13 @@ class Component(ApplicationSession):
 
     def onDisconnect(self):
         print("Client was shutdown")
+
+
+if __name__ == '__main__':
+    from autobahn.twisted.wamp import ApplicationRunner
+    runner = ApplicationRunner(url=u"ws://{}:8080/ws".format(host), realm=u"realm1")
+    try:
+        runner.run(Component, auto_reconnect=True)
+    except Exception as e:
+        print("Server is offline", e)
+        pass
