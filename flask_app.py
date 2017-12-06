@@ -8,7 +8,8 @@ import pickle
 if not os.path.exists("auto_update.p"):
     auto_update = {"backend": True,
                    "frontend": True,
-                   "esp_client": True}
+                   "esp_client": True,
+                   "raspberry_client": True}
 
     pickle.dump(auto_update, open("auto_update.p", "wb"))
 else:
@@ -42,9 +43,8 @@ def backend_webhook():
         repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
         git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
         print("GIT: {}".format(git_path))
-
     else:
-        print("Frontend Webhook is disabled in auto_update.p config")
+        print("Backend Webhook is disabled in auto_update.p config")
     return "OK"
 
 
@@ -56,21 +56,40 @@ def esp_client_webhook():
         repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
         git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
         print("GIT: {}".format(git_path))
-
     else:
-        print("Frontend Webhook is disabled in auto_update.p config")
+        print("ESP client Webhook is disabled in auto_update.p config")
+    return "OK"
+
+
+@app.route('/raspberry_client_webhook', methods=['POST'])
+def raspberry_client_webhook():
+    if auto_update["raspberry_client"]:
+        pprint(request.data)
+        data = request.data.strip().replace("\n", "")
+        repository = json.loads(data)["repository"]["links"]["html"]["href"].split("/")
+        git_path = "git@{}:{}/{}".format(repository[2], repository[3], repository[4])
+        print("GIT: {}".format(git_path))
+    else:
+        print("Raspberry client Webhook is disabled in auto_update.p config")
     return "OK"
 
 
 @app.route('/repository/<path:path>')
 def repository(path):
+    print("File {} was downloaded.".format(path))
     return send_from_directory('../', path)
 
 
 @app.route("/")
-def hello():
-    return "Hello World!"
+def root():
+    return "<h1>Hello, This is a Flask app!</h1>" \
+           "<h2>it's used as auto updater for all source code of the project SmartHome<br></h2>" \
+           "/app/frontend_webhook<br>" \
+           "/app/backend_webhook<br>" \
+           "/app/esp_client_webhook<br>" \
+           "/app/raspberry_client_webhook<br>" \
+           "/app/repository/<br>"
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8282)
+    app.run(host="0.0.0.0", port=8080)
