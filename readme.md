@@ -2,10 +2,10 @@
 
 ## TODO:
 
-- [ ] Make forwarder as a service that only forwards messages from mqtt to backend
-- [ ] Make raspberry pi mqtt client
-- [ ] Make client component, that uses raspberry client code listening on mqtt protocol
-- [ ] Add update raspberry pi client to flask app
+[ ] Make forwarder as a service that only forwards messages from mqtt to backend
+[ ] Make raspberry pi mqtt client
+[ ] Make client component, that uses raspberry client code listening on mqtt protocol
+[ ] Add update raspberry pi client to flask app
 
 ># Install python dependencies:
 >
