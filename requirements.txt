@@ -2,3 +2,4 @@ crossbar
 psycopg2-binary
 twisted-mqtt
 flask
+gitpython
